@@ -83,9 +83,9 @@ class Slip39 {
     return Slip39._(
       root: root ?? this._root,
       iterationExponent: iterationExponent ?? this.iterationExponent,
-      identifier: identifier ?? this.identifier,
-      groupCount: groupCount ?? this.groupCount,
-      groupThreshold: groupThreshold ?? this.groupThreshold,
+      identifier: this.identifier,
+      groupCount: this.groupCount,
+      groupThreshold: this.groupThreshold,
     );
   }
 

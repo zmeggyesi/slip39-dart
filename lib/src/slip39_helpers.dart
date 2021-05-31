@@ -513,8 +513,11 @@ Map _decodeMnemonic(String mnemonic) {
     final valueByteCount =
         _bitsToBytes(_radixBits * valueData.length - paddingLen)!;
     var share = encodeBigInt(valueInt);
+    print("Share length: ${share.length}");
+    print("Value bytes: $valueByteCount");
 
     if (share.length > valueByteCount) {
+      print("Mnemonic: $mnemonic");
       throw Exception('Padding error');
     } else if (share.length < valueByteCount) {
       // Add zero paddings
@@ -562,7 +565,7 @@ List<int?> _groupPrefix(
 }
 
 bool _listsAreEqual(List a, List b) {
-  if (a == null || b == null || a.length != b.length) {
+  if (a.length != b.length) {
     return false;
   }
 

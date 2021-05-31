@@ -32,6 +32,7 @@ void main() {
     List<int> combinations = [];
 
     void helper(int level, int start) {
+      combinations = List.filled(array.length, 0, growable: true);
       for (var i = start; i < array.length - k + level + 1; i++) {
         combinations[level] = array[i];
 
