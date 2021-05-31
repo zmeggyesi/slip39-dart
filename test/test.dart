@@ -28,8 +28,8 @@ void main() {
 // Combinations C(n, k) of the grooups
 //
   List getCombinations(array, k) {
-    var result = List<List<int>>();
-    var combinations = List<int>(k);
+    List<List<int?>> result = [];
+    List<int> combinations = [];
 
     void helper(int level, int start) {
       for (var i = start; i < array.length - k + level + 1; i++) {
@@ -49,7 +49,7 @@ void main() {
 
   group('Basic Tests', () {
     group('Test threshold 1 with 5 of 7 shares of a group combinations', () {
-      var mnemonics = slip15.fromPath('r/0').mnemonics;
+      var mnemonics = slip15.fromPath('r/0')!.mnemonics;
 
       var combinations = getCombinations([0, 1, 2, 3, 4, 5, 6], 5);
       combinations.forEach((item) {
@@ -65,8 +65,8 @@ void main() {
     });
 
     group('Test passhrase', () {
-      var mnemonics = slip15.fromPath('r/0').mnemonics;
-      var nopwMnemonics = slip15NoPW.fromPath('r/0').mnemonics;
+      var mnemonics = slip15.fromPath('r/0')!.mnemonics;
+      var nopwMnemonics = slip15NoPW.fromPath('r/0')!.mnemonics;
 
       test('should return valid mastersecret when user submits valid passphrse',
           () {
@@ -103,8 +103,8 @@ void main() {
             threshold: 1,
             masterSecret: masterSecret.codeUnits,
             iterationExponent: 2);
-        var m1 = slip1.fromPath('r/0').mnemonics;
-        var m2 = slip2.fromPath('r/0').mnemonics;
+        var m1 = slip1.fromPath('r/0')!.mnemonics;
+        var m2 = slip2.fromPath('r/0')!.mnemonics;
         assert(masterSecret == String.fromCharCodes(Slip39.recoverSecret(m1)));
 
         assert(masterSecret == String.fromCharCodes(Slip39.recoverSecret(m2)));
@@ -167,12 +167,12 @@ void main() {
     final tests = JsonDecoder().convert(contents);
 
     tests.forEach((item) {
-      String description = item[0];
+      String? description = item[0];
       var mnemonics = List<String>.from(item[1]);
-      String ms = item[2];
+      String? ms = item[2];
 
       test(description, () {
-        if (ms.isNotEmpty) {
+        if (ms!.isNotEmpty) {
           List<int> result =
               Slip39.recoverSecret(mnemonics, passphrase: passphrase);
           assert(ms == HEX.encode(result));
@@ -241,7 +241,7 @@ void main() {
 
   group('Mnemonic validation', () {
     vectors.forEach((item) {
-      final mnemonics = List<String>.from(item[1]);
+      final mnemonics = List<String>.from(item[1] as Iterable<dynamic>);
       var index = 0;
       test('Mnemonic at index ${index++} should be invalid', () {
         mnemonics.forEach((mnemonic) {
@@ -251,7 +251,7 @@ void main() {
       });
     });
 
-    var mnemonics = slip15.fromPath('r/0').mnemonics;
+    var mnemonics = slip15.fromPath('r/0')!.mnemonics;
 
     var index = 0;
     mnemonics.forEach((mnemonic) {
@@ -338,7 +338,7 @@ void main() {
       test(description, () {
         expect(
             () =>
-                Slip39.from(groups, masterSecret: secret, threshold: threshold),
+                Slip39.from(groups, masterSecret: secret as List<int>, threshold: threshold as int?),
             throwsException);
       });
     });
@@ -357,7 +357,7 @@ void main() {
               passphrase: passphrase,
               threshold: threshold);
 
-          final mnemonics = slip.fromPath('r').mnemonics.sublist(0, threshold);
+          final mnemonics = slip.fromPath('r')!.mnemonics.sublist(0, threshold);
           final recoveredSecret =
               Slip39.recoverSecret(mnemonics, passphrase: passphrase);
           assert(masterSecret == String.fromCharCodes(recoveredSecret));

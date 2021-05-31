@@ -46,7 +46,7 @@ void main() {
     passphrase: passphrase,
   );
 
-  final masterNode = slip.fromPath('r');
+  final masterNode = slip.fromPath('r')!;
 
   final jsonText = jsonEncode(masterNode);
   assert(jsonEncode(json) == jsonText);

@@ -59,8 +59,8 @@ const _secretIndex = 255;
 /// Helper functions for SLIP39 implementation.
 ///
 
-int _bitsToBytes(n) => (n + 7) ~/ 8;
-int _bitsToWords(n) => (n + _radixBits - 1) ~/ _radixBits;
+int? _bitsToBytes(n) => (n + 7) ~/ 8;
+int? _bitsToWords(n) => (n + _radixBits - 1) ~/ _radixBits;
 
 final _derivator = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
 final Random _random = Random.secure();
@@ -99,8 +99,8 @@ Uint8List _crypt(List masterSecret, String passphrase, int iterationExponent,
         'Invalid iteration exponent ($iterationExponent). Expected between 0 and $_maxIterationExponent');
   }
   var IL =
-      Uint8List.fromList(masterSecret.sublist(0, masterSecret.length ~/ 2));
-  var IR = Uint8List.fromList(masterSecret.sublist(masterSecret.length ~/ 2));
+      Uint8List.fromList(masterSecret.sublist(0, masterSecret.length ~/ 2) as List<int>);
+  var IR = Uint8List.fromList(masterSecret.sublist(masterSecret.length ~/ 2) as List<int>);
 
   final pwd = Uint8List.fromList(passphrase.codeUnits);
 
@@ -127,7 +127,7 @@ Uint8List _createDigest(Uint8List randomData, Uint8List sharedSecret) {
   return Uint8List.fromList(result.sublist(0, 4));
 }
 
-List _splitSecret(int threshold, int shareCount, Uint8List sharedSecret) {
+List _splitSecret(int threshold, int shareCount, Uint8List? sharedSecret) {
   if (threshold <= 0) {
     throw Exception(
         'The requested threshold ($threshold) must be a positive integer.');
@@ -149,7 +149,7 @@ List _splitSecret(int threshold, int shareCount, Uint8List sharedSecret) {
 
   final randomShareCount = threshold - 2;
 
-  final randomPart = _randomBytes(sharedSecret.length - _digestLength);
+  final randomPart = _randomBytes(sharedSecret!.length - _digestLength);
   final digest = _createDigest(Uint8List.fromList(randomPart), sharedSecret);
 
   final sharesIdx = List.generate(randomShareCount, (i) => i);
@@ -172,7 +172,7 @@ List _splitSecret(int threshold, int shareCount, Uint8List sharedSecret) {
 /// Returns a randomly generated integer in the range 0, ... , 2**_identifierBitsLength - 1.
 ///
 Uint8List _generateIdentifier() {
-  final byte = _bitsToBytes(_identifierBitsLength);
+  final byte = _bitsToBytes(_identifierBitsLength)!;
   final bits = _identifierBitsLength % 8;
   final identifier = _randomBytes(byte);
 
@@ -279,9 +279,9 @@ int _rs1024Polymod(values) {
   return chk;
 }
 
-List<int> _rs1024CreateChecksum(data) {
+List<int?> _rs1024CreateChecksum(data) {
   final values =
-      _saltString.codeUnits + data + List<int>.filled(_checksumWordsLength, 0);
+      _saltString.codeUnits.cast<int?>() + data + List<int>.filled(_checksumWordsLength, 0);
 
   int polymod = _rs1024Polymod(values) ^ 1;
   final result =
@@ -312,12 +312,12 @@ BigInt _intFromIndices(List indices) {
 List<int> _intToIndices(BigInt value, length, bits) {
   final mask = BigInt.from((1 << bits) - 1);
   final result =
-      List.generate(length, (i) => (((value >> (i * bits)) & mask)).toInt());
+      List.generate(length, (i) => ((value >> (i * bits as int)) & mask).toInt());
   return result.reversed.toList();
 }
 
-String _mnemonicFromIndices(List indices) {
-  final result = indices.fold('', (prev, index) {
+String? _mnemonicFromIndices(List indices) {
+  final result = indices.fold('', (dynamic prev, index) {
     final separator = prev == '' ? '' : ' ';
     return prev + separator + _wordList[index];
   });
@@ -327,7 +327,7 @@ String _mnemonicFromIndices(List indices) {
 List<int> _mnemonicToIndices(String mnemonic) {
   final words = mnemonic.toLowerCase().split(' ');
 
-  final result = words.fold(<int>[], (prev, item) {
+  final result = words.fold(<int>[], (dynamic prev, item) {
     final index = _wordListMap[item];
     if (index == null) {
       throw Exception('Invalid mnemonic word $item.');
@@ -337,7 +337,7 @@ List<int> _mnemonicToIndices(String mnemonic) {
   return result;
 }
 
-Uint8List _recoverSecret(threshold, shares) {
+Uint8List? _recoverSecret(threshold, shares) {
   // If the threshold is 1, then the digest of the shared secret is not used.
   if (threshold == 1) {
     return shares.values.first; //next(iter(shares))[1]
@@ -360,7 +360,7 @@ Uint8List _recoverSecret(threshold, shares) {
 /// Combines mnemonic shares to obtain the master secret which was previously
 /// split using Shamir's secret sharing scheme.
 //
-List<int> _combineMnemonics({List<String> mnemonics, String passphrase = ''}) {
+List<int> _combineMnemonics({List<String>? mnemonics, String passphrase = ''}) {
   if (mnemonics == null || mnemonics.isEmpty) {
     throw Exception('The list of mnemonics is empty.');
   }
@@ -402,7 +402,7 @@ List<int> _combineMnemonics({List<String> mnemonics, String passphrase = ''}) {
     allShares[groupIndex] = recovered;
   });
 
-  final ems = _recoverSecret(groupThreshold, allShares);
+  final ems = _recoverSecret(groupThreshold, allShares)!;
   final id = Uint8List.fromList(
       _intToIndices(BigInt.from(identifier), _identifierExpWordsLength, 8));
   final ms = _crypt(ems, passphrase, iterationExponent, id, encrypt: false);
@@ -511,7 +511,7 @@ Map _decodeMnemonic(String mnemonic) {
 
   try {
     final valueByteCount =
-        _bitsToBytes(_radixBits * valueData.length - paddingLen);
+        _bitsToBytes(_radixBits * valueData.length - paddingLen)!;
     var share = encodeBigInt(valueInt);
 
     if (share.length > valueByteCount) {
@@ -546,7 +546,7 @@ bool _validateMnemonic(String mnemonic) {
   }
 }
 
-List<int> _groupPrefix(
+List<int?> _groupPrefix(
     identifier, iterationExponent, groupIndex, groupThreshold, groupCount) {
   final id_exp_int = BigInt.from(
       (identifier << _iterationExponentBitsLength) + iterationExponent);
@@ -556,7 +556,7 @@ List<int> _groupPrefix(
   final indc2 =
       (groupIndex << 6) + ((groupThreshold - 1) << 2) + ((groupCount - 1) >> 2);
 
-  return <int>[]
+  return <int?>[]
     ..addAll(indc)
     ..add(indc2);
 }
@@ -575,7 +575,7 @@ bool _listsAreEqual(List a, List b) {
 ///
 ///   Converts share data to a share mnemonic.
 ///
-String _encodeMnemonic(
+String? _encodeMnemonic(
   identifier,
   iterationExponent,
   groupIndex,
@@ -586,7 +586,7 @@ String _encodeMnemonic(
   value,
 ) {
 // Convert the share value from bytes to wordlist indices.
-  final valueWordCount = _bitsToWords(value.length * 8);
+  final valueWordCount = _bitsToWords(value.length * 8)!;
 
   BigInt valueInt = decodeBigInt(value);
   identifier = int.parse(HEX.encode(identifier), radix: 16);
@@ -600,7 +600,7 @@ String _encodeMnemonic(
       (memberIndex << 4) +
       (memberThreshold - 1);
 
-  final shareData = <int>[]
+  final shareData = <int?>[]
     ..addAll(gp)
     ..add(calc)
     ..addAll(tp);

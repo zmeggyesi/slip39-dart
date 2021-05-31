@@ -25,11 +25,11 @@ void main() {
       threshold: threshold);
 
   // One of Alice's share
-  final aliceShare = slip.fromPath('r/0').mnemonics;
+  final aliceShare = slip.fromPath('r/0')!.mnemonics;
 
   // and any two of family's shares.
-  var familyShares = slip.fromPath('r/3/3').mnemonics;
-  familyShares = familyShares..addAll(slip.fromPath('r/3/2').mnemonics);
+  var familyShares = slip.fromPath('r/3/3')!.mnemonics;
+  familyShares = familyShares..addAll(slip.fromPath('r/3/2')!.mnemonics);
 
   final allShares = aliceShare..addAll(familyShares);
 

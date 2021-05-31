@@ -30,7 +30,7 @@ class Slip39 {
     dynamic data, {
     List<int> masterSecret = const [],
     String passphrase = '',
-    int threshold = 0,
+    int? threshold = 0,
     int iterationExponent = 0,
   }) {
     final name = data is Map ? data['name'] : 'All Shares';
@@ -44,7 +44,7 @@ class Slip39 {
     Slip39._validateParams(
         masterSecret: masterSecret,
         passphrase: passphrase,
-        threshold: threshold,
+        threshold: threshold!,
         iterationExponent: iterationExponent,
         groups: groups);
 
@@ -68,7 +68,7 @@ class Slip39 {
   static const _keyPrefix = 'r';
   static const _maxDepth = 2;
 
-  final Slip39Node _root;
+  final Slip39Node? _root;
   final int groupCount;
   final int groupThreshold;
 
@@ -79,7 +79,7 @@ class Slip39 {
   ///
   /// Methods
   ///
-  Slip39 copyWith({Slip39Node root, String iterationExponent}) {
+  Slip39 copyWith({Slip39Node? root, String? iterationExponent}) {
     return Slip39._(
       root: root ?? this._root,
       iterationExponent: iterationExponent ?? this.iterationExponent,
@@ -89,7 +89,7 @@ class Slip39 {
     );
   }
 
-  static List<int> recoverSecret(List<String> mnemonics,
+  static List<int> recoverSecret(List<String>? mnemonics,
       {String passphrase = ''}) {
     return _combineMnemonics(mnemonics: mnemonics, passphrase: passphrase);
   }
@@ -98,7 +98,7 @@ class Slip39 {
     return _validateMnemonic(mnemonic);
   }
 
-  Slip39Node fromPath(String path) {
+  Slip39Node? fromPath(String path) {
     _validatePath(path);
 
     Iterable<int> children = _parseChildren(path);
@@ -107,8 +107,8 @@ class Slip39 {
       return _root;
     }
 
-    return children.fold(_root, (Slip39Node prev, int childNumber) {
-      if (childNumber >= prev._children.length) {
+    return children.fold(_root, (Slip39Node? prev, int childNumber) {
+      if (childNumber >= prev!._children.length) {
         throw ArgumentError(
             'The path index ($childNumber) exceeds the children index (${prev._children.length - 1}).');
       }
@@ -118,9 +118,9 @@ class Slip39 {
   }
 
   Slip39Node _from(
-      {Slip39Node current,
-      List nodes,
-      Uint8List secret,
+      {Slip39Node? current,
+      required List nodes,
+      Uint8List? secret,
       int index = 0,
       int depth = 0}) {
     if (depth++ > _maxDepth) {
@@ -133,7 +133,7 @@ class Slip39 {
           index,
           groupThreshold,
           groupCount,
-          current._index,
+          current!._index,
           current._threshold,
           secret);
 
@@ -141,7 +141,7 @@ class Slip39 {
     }
 
     var children = [];
-    final secretShares = _splitSecret(current._threshold, nodes.length, secret);
+    final secretShares = _splitSecret(current!._threshold, nodes.length, secret);
     var idx = 0;
     nodes.forEach((item) {
       var name;
@@ -204,10 +204,10 @@ class Slip39 {
 
   static void _validateParams(
       {List<int> masterSecret = const [],
-      String passphrase,
-      int iterationExponent,
-      int threshold,
-      List groups}) {
+      required String passphrase,
+      int? iterationExponent,
+      required int threshold,
+      required List groups}) {
     if (masterSecret.length * 8 < _minEntropyBits) {
       throw Exception(
           'The length of the master secret (${masterSecret.length} bytes) must be at least ${_bitsToBytes(_minEntropyBits)} bytes.');
